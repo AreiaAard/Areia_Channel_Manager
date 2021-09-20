@@ -59,6 +59,7 @@ end
 
 function Config.default()
     local data = {
+        ["channels"] = {},
     }
     return serialize.save_simple(data)
 end

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Areia_Channel_Manager"
+   author="Areia"
+   id="bdecb2809fc86be2e77859e0"
+   language="Lua"
+   purpose="Create personal tracker-style channels"
+   save_state="n"
+   date_written="2021-09-20 18:00:00"
+   requires="5.06"
+   version="0.0"
+   >
+<description trim="y">
+<![CDATA[
+]]>
+</description>
+
+</plugin>
+
+<include name="constants.lua"/>
+
+
+
+<aliases>
+</aliases>
+
+
+
+<triggers>
+</triggers>
+
+
+
+<script>
+<![CDATA[
+require "commas"
+require "copytable"
+require "gmcphelper"
+require "serialize"
+require "tprint"
+require "var"
+require "wait"
+dofile(GetInfo(60) .. "aardwolf_colors.lua")
+
+
+
+--------------------------------------------------
+-- Config
+--------------------------------------------------
+
+Config = {}
+
+function Config.initialize()
+    Config.load()
+end
+
+function Config.default()
+    local data = {
+    }
+    return serialize.save_simple(data)
+end
+
+function Config.load()
+    local strvar = var.config or Config.default()
+    local data = loadstring("return " .. strvar)()
+    Config.data = data
+end
+
+function Config.save()
+    var.config = serialize.save_simple(Config.data)
+end
+
+function Config.get(key)
+    return Config.data[key]
+end
+
+function Config.set(key, val)
+    Config.data[key] = val
+    Config.save()
+end
+]]>
+</script>
+
+
+
+<script>
+<![CDATA[
+--------------------------------------------------
+-- Utility
+--------------------------------------------------
+
+Utility = {}
+
+function Utility.initialize()
+    local modules = {
+        Config,
+    }
+    for _, module in ipairs(modules) do
+        if (module.initialize) then
+            module.initialize()
+        end
+    end
+end
+
+function Utility.deinitialize()
+end
+
+function Utility.print(str)
+    -- Lets us use Aard color codes in our ColourNotes
+    AnsiNote(stylesToANSI(ColoursToStyles(string.format("@w%s@w", str))))
+end
+
+function Utility.msg_prim(str, ...)
+    Utility.print(string.format("[@YEnchant Bot@w]: %s", str))
+    for _, msg in ipairs{...} do
+        Utility.second_msg(msg)
+    end
+end
+
+function Utility.msg_sec(str)
+    Utility.print(string.format("               %s", str))
+end
+
+function Utility.pascal_case(str)
+    str = str:gsub("(%a)([%w_']*)",
+        function(first,remainder)
+            return string.format("%s%s", first:upper(), remainder:lower())
+        end
+    )
+    return str
+end
+
+function Utility.starts_with(s, t)
+    if not (type(s) == "string" and type(t) == "string") then
+        return false
+    end
+    return s:sub(1, #t) == t
+end
+]]>
+</script>
+
+
+
+<script>
+<![CDATA[
+--------------------------------------------------
+-- Plugin Callbacks
+--------------------------------------------------
+
+function OnPluginInstall()
+    Utility.initialize()
+end
+
+function OnPluginEnable()
+    OnPluginInstall()
+end
+
+function OnPluginClose()
+    Utility.deinitialize()
+end
+
+function OnPluginDisable()
+    OnPluginClose()
+end
+
+function OnPluginBroadcast(msg, id, name, text)
+    if (id == "3e7dedbe37e44942dd46d264") then
+    end
+end
+]]>
+</script>
+
+
+</muclient>

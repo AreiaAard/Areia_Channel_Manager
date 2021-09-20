@@ -114,14 +114,14 @@ function Utility.print(str)
 end
 
 function Utility.msg_prim(str, ...)
-    Utility.print(string.format("[@YEnchant Bot@w]: %s", str))
+    Utility.print(string.format("[@YChannel Manager@w]: %s", str))
     for _, msg in ipairs{...} do
         Utility.second_msg(msg)
     end
 end
 
 function Utility.msg_sec(str)
-    Utility.print(string.format("               %s", str))
+    Utility.print(string.format("                   %s", str))
 end
 
 function Utility.pascal_case(str)

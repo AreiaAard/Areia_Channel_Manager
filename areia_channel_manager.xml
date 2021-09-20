@@ -82,6 +82,35 @@ function Config.set(key, val)
     Config.data[key] = val
     Config.save()
 end
+
+function Config.new_channel(name)
+    name = name:lower()
+    return {
+        ["name"] = name,
+        ["prefix"] = string.format("@W%s@w: @w", name),
+        ["sound"] = "",
+        ["volume"] = 100,
+        ["history"] = {},
+    }
+end
+
+function Config.get_channel(name)
+    return Config.get("channels")[name:lower()]
+end
+
+function Config.set_channel(name, key, val)
+    Config.get_channel(name)[key] = val
+    Config.save()
+end
+
+function Config.add_channel_history(name, msg, time)
+    local history = Config.get_channel(name).history
+    history[#history + 1] = {msg=msg, time=time}
+    if (#history > 100) then
+        table.remove(history, 1)
+    end
+    Config.save()
+end
 ]]>
 </script>
 

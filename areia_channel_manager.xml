@@ -319,6 +319,35 @@ function Channel.add_aliases()
 end
 
 function Channel.parse_input(alias, line, wc)
+    local channel = wc.channel:lower()
+    local arg = trim(wc.arg)
+    if (arg == "") then
+        Utility.msg_prim(string.format("%s what?", Utility.pascal_case(channel)))
+        return
+    end
+    
+    if (Utility.starts_with(arg, "-h")) then
+        Channel.show_history(channel, trim(arg:gsub("-h", "", 1)))
+        return
+    end
+    
+    Channel.post(channel, arg)
+end
+
+function Channel.show_history(channel, arg)
+end
+
+function Channel.post(channel, msg)
+    local time = os.date("%d %b %I:%M:%S%p") -- e.g., 21 Sep 05:01:35PM
+    if (not msg or msg == "") then
+        return
+    end
+    
+    -- Record in history
+    Config.add_channel_history(channel, msg, time)
+    
+    local prefix = Config.get_channel(channel).prefix
+    Utility.print(string.format("%s%s", prefix, msg))
 end
 ]]>
 </script>

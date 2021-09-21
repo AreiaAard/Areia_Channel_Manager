@@ -302,7 +302,7 @@ function Channel.add_aliases()
         local aliasName = string.format("alias_channel_%s", name)
         local ret = AddAlias(
             aliasName,
-            string.format("^%s(?<arg>.*)$", name), -- match text
+            string.format("^(?<channel>%s)(?<arg>.*)$", name), -- match text
             "", -- response
             aliasFlags,
             "Channel.parse_input" -- script

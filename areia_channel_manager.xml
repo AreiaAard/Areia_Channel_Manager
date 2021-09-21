@@ -111,6 +111,22 @@ function Config.add_channel_history(name, msg, time)
     end
     Config.save()
 end
+
+function Config.select_channel()
+    local channelNames = {}
+    for name, info in pairs(Config.get("channels")) do
+        channelNames[#channelNames + 1] = name
+    end
+    if (#channelNames == 0) then
+        return -1
+    end
+    local index = utils.choose("Select a channel name.", "Channels", channelNames)
+    if (not index) then
+        -- No selection / cancelled
+        return -1
+    end
+    return Config.get_channel(channelNames[index])
+end
 ]]>
 </script>
 

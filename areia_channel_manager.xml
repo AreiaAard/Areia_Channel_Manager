@@ -278,6 +278,21 @@ end
 <script>
 <![CDATA[
 --------------------------------------------------
+-- Channel
+--------------------------------------------------
+
+Channel = {}
+
+function Channel.initialize()
+end
+]]>
+</script>
+
+
+
+<script>
+<![CDATA[
+--------------------------------------------------
 -- Utility
 --------------------------------------------------
 
@@ -286,6 +301,7 @@ Utility = {}
 function Utility.initialize()
     local modules = {
         Config,
+        Channel,
     }
     for _, module in ipairs(modules) do
         if (module.initialize) then

@@ -236,6 +236,7 @@ function Config.add_channel(alias, line, wc)
     new.volume = volume
     Config.get("channels")[name] = new
     Config.save()
+    Channel.add_aliases()
     Utility.msg_prim(string.format(
         "New @Y%s @wchannel added.",
         Utility.pascal_case(name)
@@ -265,6 +266,7 @@ function Config.remove_channel(alias, line, wc)
     
     Config.get("channels")[name] = nil
     Config.save()
+    Channel.add_aliases()
     Utility.msg_prim(string.format(
         "@Y%s @wchannel deleted.",
         Utility.pascal_case(name)
@@ -284,6 +286,39 @@ end
 Channel = {}
 
 function Channel.initialize()
+    Channel.add_aliases()
+end
+
+function Channel.remove_aliases()
+    return DeleteAliasGroup("group_channel_parseinput")
+end
+
+function Channel.add_aliases()
+    Channel.remove_aliases()
+    
+    local aliasFlags = alias_flag.Enabled + alias_flag.IgnoreAliasCase
+        + alias_flag.RegularExpression + alias_flag.Temporary
+    for name, info in pairs(Config.get("channels")) do
+        local aliasName = string.format("alias_channel_%s", name)
+        local ret = AddAlias(
+            aliasName,
+            string.format("^%s(?<arg>.*)$", name), -- match text
+            "", -- response
+            aliasFlags,
+            "Channel.parse_input" -- script
+        )
+        
+        if (ret == eOK) then
+            SetAliasOption(aliasName, "group", "group_channel_parseinput")
+        else
+            Utility.msg_prim(string.format(
+                "Failed to create @Y%s @wchannel alias [@R%s@w].", name, ret
+            ))
+        end
+    end
+end
+
+function Channel.parse_input(alias, line, wc)
 end
 ]]>
 </script>

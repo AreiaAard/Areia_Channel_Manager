@@ -43,6 +43,25 @@
      sequence="100"
     >
     </alias>
+    
+    <alias
+     match="^acm\s+(?:del|dele|delet|delete|rem|remo|remov|remove)$"
+     enabled="y"
+     script="Config.remove_channel"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
+    <alias
+     match="^acm\s+(?:del|dele|delet|delete|rem|remo|remov|remove)\s+(?<name>.+)$"
+     enabled="y"
+     script="Config.remove_channel"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
 </aliases>
 
 
@@ -141,9 +160,9 @@ function Config.select_channel()
     local index = utils.choose("Select a channel name.", "Channels", channelNames)
     if (not index) then
         -- No selection / cancelled
-        return -1
+        return
     end
-    return Config.get_channel(channelNames[index])
+    return channelNames[index]
 end
 
 function Config.add_channel(alias, line, wc)
@@ -219,6 +238,35 @@ function Config.add_channel(alias, line, wc)
     Config.save()
     Utility.msg_prim(string.format(
         "New @Y%s @wchannel added.",
+        Utility.pascal_case(name)
+    ))
+end
+
+function Config.remove_channel(alias, line, wc)
+    local name = wc.name or Config.select_channel()
+    if (not name) then
+        Utility.msg_prim("Channel deletion aborted. No name given.")
+        return
+    elseif (name == -1) then
+        Utility.msg_prim("Channel deletion aborted. No channels to delete.")
+        return
+    end
+    
+    name = trim(name:lower())
+    if (name == "") then
+        Utility.msg_prim("Channel deletion aborted. No name given.")
+        return
+    end
+    
+    if (not Config.get_channel(name)) then
+        Utility.msg_prim("Channel deletion aborted. That channel doesn't exist.")
+        return
+    end
+    
+    Config.get("channels")[name] = nil
+    Config.save()
+    Utility.msg_prim(string.format(
+        "@Y%s @wchannel deleted.",
         Utility.pascal_case(name)
     ))
 end

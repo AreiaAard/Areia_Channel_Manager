@@ -25,6 +25,24 @@
 
 
 <aliases>
+    <alias
+     match="^acm\s+add$"
+     enabled="y"
+     script="Config.add_channel"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
+    <alias
+     match="^acm\s+add\s+(?<name>.+)$"
+     enabled="y"
+     script="Config.add_channel"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
 </aliases>
 
 
@@ -126,6 +144,83 @@ function Config.select_channel()
         return -1
     end
     return Config.get_channel(channelNames[index])
+end
+
+function Config.add_channel(alias, line, wc)
+    local name = wc.name
+    if (not name) then
+        name = utils.inputbox("Enter the name of the new channel.",
+            "New Channel - Name"
+        )
+        if (not name) then
+            -- No input / cancelled
+            Utility.msg_prim("Channel creation aborted.")
+            return
+        end
+    end
+    name = trim(name:lower())
+    if (name == "") then
+        Utility.msg_prim("Channel creation aborted. No name given.")
+        return
+    end
+    
+    if (Config.get_channel(name)) then
+        Utility.msg_prim("Channel creation aborted. That channel already exists.")
+        return
+    end
+    
+    local new = Config.new_channel(name)
+    local prefix = utils.inputbox(
+        "Enter a prefix for the channel. You may add color codes to the text.",
+        "New Channel - Prefix",
+        new.prefix -- default value
+    )
+    if (not prefix) then
+        Utility.msg_prim("Channel creation aborted.")
+        return
+    end
+    prefix = trim(prefix)
+    if (prefix == "") then
+        Utility.msg_prim("Channel creation aborted. No prefix given.")
+        return
+    end
+    
+    local sound = utils.inputbox(
+        "The sound file to play for this channel. Leave blank for no sound.",
+        "New Channel - Sound"
+    )
+    if (not sound) then
+        Utility.msg_prim("Channel creation aborted.")
+        return
+    end
+    
+    local volume = new.volume
+    if (sound == "") then
+        volume = 0
+    else
+        volume = utils.inputbox(
+            "Enter the volume level for the channel's sound. Must be 0 - 100.",
+            "New Channel - Volume",
+            new.volume, -- default value
+            nil, nil, -- font info
+            {validate = function(t) return tonumber(t) and true or false end}
+        )
+        if (not volume) then
+            Utility.msg_prim("Channel creation aborted.")
+            return
+        end
+        volume = math.floor(tonumber(volume))
+    end
+    
+    new.prefix = prefix
+    new.sound = sound
+    new.volume = volume
+    Config.get("channels")[name] = new
+    Config.save()
+    Utility.msg_prim(string.format(
+        "New @Y%s @wchannel added.",
+        Utility.pascal_case(name)
+    ))
 end
 ]]>
 </script>

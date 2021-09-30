@@ -394,6 +394,37 @@ function Channel.show_history_previous(channel, previous)
 end
 
 function Channel.show_history_containing(channel, str)
+    local history = channel.history
+    if (#history == 0) then
+        local name = Utility.pascal_case(channel.name)
+        Utility.print(string.format("No @Y%s @whistory to display.", name))
+        return
+    end
+    
+    str = str:lower()
+    if ((Utility.starts_with(str, "\"") or Utility.starts_with(str, "'"))
+    and (Utility.ends_with(str, "\"") or Utility.ends_with(str, "'"))) then
+        str = str:sub(2, #str - 1) -- strip surrounding quotes if any
+    end
+    local results = {}
+    for _, entry in ipairs(history) do
+        if (strip_colours(entry.msg:lower()):match(str)) then
+            results[#results + 1] = entry
+        end
+    end
+    if (#results == 0) then
+        local name = Utility.pascal_case(channel.name)
+        Utility.print(string.format("No @Y%s @whistory containing '%s'.",
+            name, str
+        ))
+        return
+    end
+    
+    local prefix = channel.prefix
+    local line = "[%s] - %s%s"
+    for _, entry in ipairs(results) do
+        Utility.print(line:format(entry.time, prefix, entry.msg))
+    end
 end
 
 function Channel.post(channel, msg)
@@ -466,6 +497,10 @@ function Utility.starts_with(s, t)
         return false
     end
     return s:sub(1, #t) == t
+end
+
+function Utility.ends_with(s, t)
+    return Utility.starts_with(s:reverse(), t:reverse())
 end
 ]]>
 </script>

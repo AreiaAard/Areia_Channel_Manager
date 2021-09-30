@@ -370,6 +370,27 @@ function Channel.show_history_full(channel)
 end
 
 function Channel.show_history_previous(channel, previous)
+    local history = channel.history
+    local entries = #history
+    if (entries == 0) then
+        local name = Utility.pascal_case(channel.name)
+        Utility.print(string.format("No @Y%s @whistory to display.", name))
+        return
+    end
+    
+    if (previous < 1) then
+        previous = 1
+    elseif (previous >= entries) then
+        previous = entries
+    end
+    
+    local prefix = channel.prefix
+    local line = "[%s] - %s%s"
+    local firstEntry = entries - previous + 1
+    local lastEntry = entries
+    for i = firstEntry, lastEntry do
+        Utility.print(line:format(history[i].time, prefix, history[i].msg))
+    end
 end
 
 function Channel.show_history_containing(channel, str)

@@ -72,6 +72,15 @@
      sequence="100"
     >
     </alias>
+    <alias
+     match="^acm\s+config\s+mute(?<setting>.*)$"
+     enabled="y"
+     script="Config.set_mute"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
 </aliases>
 
 
@@ -300,6 +309,23 @@ function Config.set_timestamps(alias, line, wc)
     local msg = "Timestamps on channel history will %s be shown."
     Utility.msg_prim(msg:format(timestamps and "now" or "no longer"))
 end
+
+function Config.set_mute(alias, line, wc)
+    local setting = trim(wc.setting:lower())
+    if (setting == "on") then
+        Config.set("mute", true)
+    elseif (setting == "off") then
+        Config.set("mute", false)
+    elseif (setting == "") then
+        Config.set("mute", not Config.get("mute"))
+    else
+        Utility.msg_prim("Syntax: @Yacm config mute [on|off]")
+        return
+    end
+    local mute = Config.get("mute")
+    local msg = "Sounds %smuted."
+    Utility.msg_prim(msg:format(mute and "" or "un"))
+end
 ]]>
 </script>
 
@@ -472,7 +498,7 @@ function Channel.post(channel, msg)
     local time = os.date("%d %b %I:%M:%S%p") -- e.g., 21 Sep 05:01:35PM
     Config.add_channel_history(channel.name, msg, time)
     
-    if (channel.sound ~= "" and channel.volume > 0) then
+    if (not Config.get("mute") and channel.sound ~= "" and channel.volume > 0) then
         local vol = -(20 - 0.2*channel.volume)
         PlaySound(0, channel.sound, false, vol, 0)
     end

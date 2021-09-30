@@ -460,16 +460,24 @@ function Channel.show_history_containing(channel, str)
 end
 
 function Channel.post(channel, msg)
-    local time = os.date("%d %b %I:%M:%S%p") -- e.g., 21 Sep 05:01:35PM
     if (not msg or msg == "") then
-        return
+        return false
+    end
+    channel = Config.get_channel(channel)
+    if (not channel) then
+        return false
     end
     
     -- Record in history
-    Config.add_channel_history(channel, msg, time)
+    local time = os.date("%d %b %I:%M:%S%p") -- e.g., 21 Sep 05:01:35PM
+    Config.add_channel_history(channel.name, msg, time)
     
-    local prefix = Config.get_channel(channel).prefix
-    Utility.print(string.format("%s%s", prefix, msg))
+    if (channel.sound ~= "" and channel.volume > 0) then
+        local vol = -(20 - 0.2*channel.volume)
+        PlaySound(0, channel.sound, false, vol, 0)
+    end
+    
+    Utility.print(string.format("%s%s", channel.prefix, msg))
 end
 ]]>
 </script>

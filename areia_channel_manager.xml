@@ -62,6 +62,16 @@
      sequence="100"
     >
     </alias>
+    
+    <alias
+     match="^acm\s+config\s+timestamps(?<setting>.*)$"
+     enabled="y"
+     script="Config.set_timestamps"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
 </aliases>
 
 
@@ -97,6 +107,7 @@ end
 function Config.default()
     local data = {
         ["channels"] = {},
+        ["timestamps"] = true,
     }
     return serialize.save_simple(data)
 end
@@ -272,6 +283,23 @@ function Config.remove_channel(alias, line, wc)
         Utility.pascal_case(name)
     ))
 end
+
+function Config.set_timestamps(alias, line, wc)
+    local setting = trim(wc.setting:lower())
+    if (setting == "on") then
+        Config.set("timestamps", true)
+    elseif (setting == "off") then
+        Config.set("timestamps", false)
+    elseif (setting == "") then
+        Config.set("timestamps", not Config.get("timestamps"))
+    else
+        Utility.msg_prim("Syntax: @Yacm config timestamps [on|off]")
+        return
+    end
+    local timestamps = Config.get("timestamps")
+    local msg = "Timestamps on channel history will %s be shown."
+    Utility.msg_prim(msg:format(timestamps and "now" or "no longer"))
+end
 ]]>
 </script>
 
@@ -355,8 +383,13 @@ function Channel.show_history(channel, arg)
 end
 
 function Channel.display_history_entry(channel, entry)
-    local line = "[%s] - %s%s"
-    Utility.print(line:format(entry.time, channel.prefix, entry.msg))
+    if (Config.get("timestamps")) then
+        local line = "[%s] - %s%s"
+        Utility.print(line:format(entry.time, channel.prefix, entry.msg))
+    else
+        local line = "%s%s"
+        Utility.print(line:format(channel.prefix, entry.msg))
+    end
 end
 
 function Channel.show_history_full(channel)

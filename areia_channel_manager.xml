@@ -335,6 +335,44 @@ function Channel.parse_input(alias, line, wc)
 end
 
 function Channel.show_history(channel, arg)
+    local channelData = Config.get_channel(channel)
+    if (not channelData) then
+        return
+    end
+    
+    if (not arg or arg == "") then
+        Channel.show_history_full(channelData)
+        return
+    end
+    
+    local previous = tonumber(arg)
+    if (previous) then
+        Channel.show_history_previous(channelData, math.floor(previous))
+        return
+    end
+    
+    Channel.show_history_containing(channelData, arg)
+end
+
+function Channel.show_history_full(channel)
+    local history = channel.history
+    if (#history == 0) then
+        local name = Utility.pascal_case(channel.name)
+        Utility.print(string.format("No @Y%s @whistory to display.", name))
+        return
+    end
+    
+    local prefix = channel.prefix
+    local line = "[%s] - %s%s"
+    for _, entry in ipairs(history) do
+        Utility.print(line:format(entry.time, prefix, entry.msg))
+    end
+end
+
+function Channel.show_history_previous(channel, previous)
+end
+
+function Channel.show_history_containing(channel, str)
 end
 
 function Channel.post(channel, msg)

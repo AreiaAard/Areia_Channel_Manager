@@ -11,7 +11,7 @@
    save_state="y"
    date_written="2021-09-20 18:00:00"
    requires="5.06"
-   version="0.1"
+   version="0.2"
    >
 <description trim="y">
 <![CDATA[
@@ -57,6 +57,16 @@
      match="^acm\s+(?:del|dele|delet|delete|rem|remo|remov|remove)\s+(?<name>.+)$"
      enabled="y"
      script="Config.remove_channel"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
+    
+    <alias
+     match="^acm\s+li?st?$"
+     enabled="y"
+     script="Config.list_channels"
      regexp="y"
      ignore_case="y"
      sequence="100"
@@ -302,6 +312,35 @@ function Config.remove_channel(alias, line, wc)
         "@Y%s @wchannel deleted.",
         Utility.pascal_case(name)
     ))
+end
+
+function Config.list_channels(alias, line, wc)
+    local channels = Config.get("channels")
+    local alphabetized = {}
+    for _, channel in pairs(channels) do
+        alphabetized[#alphabetized + 1] = channel.name
+    end
+    if (#alphabetized == 0) then
+        Utility.msg_prim("No channels yet added.")
+        Utility.msg_sec("Enter @Yacm new @wto add a new channel.")
+        return
+    end
+    table.sort(alphabetized)
+    
+    local seperator = "+-----------------+----------------------+----------------------+-----+"
+    local entry = "| %-15.15s | %-20.20s | %-20.20s | %-3.3s |"
+    Utility.print(seperator)
+    Utility.print(entry:format("Name", "Prefix", "Sound", "Vol"))
+     Utility.print(seperator)
+    for _, channel in ipairs(alphabetized) do
+        Note(entry:format(
+            Utility.pascal_case(channels[channel].name),
+            channels[channel].prefix,
+            channels[channel].sound,
+            channels[channel].volume
+        ))
+    end
+    Utility.print(seperator)
 end
 
 function Config.set_timestamps(alias, line, wc)

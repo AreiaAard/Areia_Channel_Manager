@@ -550,6 +550,74 @@ end
 
 
 
+<aliases>
+    <alias
+     match="^acm\s+update$"
+     enabled="y"
+     script="Update.update"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
+</aliases>
+
+<script>
+<![CDATA[
+--------------------------------------------------
+-- Update
+--------------------------------------------------
+
+Update = {}
+
+function Update.update(alias, line, wc)
+    local name = GetPluginName()
+    local url = "https://raw.githubusercontent.com/AreiaAard/%s/main/%s.xml"
+    raw = url:format(name, name:lower())
+    async_ok, async = pcall (require, "async")
+    if async_ok then
+        plugin_page = async.doAsyncRemoteRequest(raw, Update.raw_get, "HTTPS")
+    else
+        Utility.plugin_message("Error. Update failed.")
+    end
+end
+
+function Update.raw_get(retval, page, status, headers, full_status, request_url)
+    local name = GetPluginName()
+    local version = GetPluginInfo(GetPluginID(), 19)
+    if (status == 200) then
+        raw_version = tonumber(string.match(page, '%s%s+version="([0-9%.]+)"'))
+    end
+    if (raw_version == version) then
+        Utility.msg_prim(string.format(
+            "@Y%s @wis up-to-date with the current version.",
+            name
+        ))
+    elseif (raw_version > version) then
+        Utility.msg_prim(string.format(
+            "Updating @Y%s @wfrom v%s to v%s.",
+            name, version, raw_version
+        ))
+        Utility.print("                 Please do not touch anything.")
+        local file = io.open(GetPluginInfo(GetPluginID(), 6), "w")
+        file:write(page)
+        file:close()
+    end
+    raw_version = nil
+    if (GetAlphaOption("script_prefix") == "") then
+        SetAlphaOption("script_prefix", "\\\\\\")
+    end
+    Execute(string.format(
+        "%sDoAfterSpecial(1, \"ReloadPlugin('%s')\", sendto.script)",
+        GetAlphaOption("script_prefix"), GetPluginID()
+    ))
+    Utility.msg_prim("Update completed.")
+end
+]]>
+</script>
+
+
+
 <script>
 <![CDATA[
 --------------------------------------------------

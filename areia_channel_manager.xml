@@ -81,6 +81,15 @@
      sequence="100"
     >
     </alias>
+    <alias
+     match="^acm\s+config\s+vireview(?<setting>.*)$"
+     enabled="y"
+     script="Config.set_vireview"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
 </aliases>
 
 
@@ -116,7 +125,9 @@ end
 function Config.default()
     local data = {
         ["channels"] = {},
+        ["mute"] = false,
         ["timestamps"] = true,
+        ["vireview"] = true,
     }
     return serialize.save_simple(data)
 end
@@ -326,6 +337,26 @@ function Config.set_mute(alias, line, wc)
     local msg = "Sounds %smuted."
     Utility.msg_prim(msg:format(mute and "" or "un"))
 end
+
+function Config.set_vireview(alias, line, wc)
+    local setting = trim(wc.setting:lower())
+    if (setting == "on") then
+        Config.set("vireview", true)
+    elseif (setting == "off") then
+        Config.set("vireview", false)
+    elseif (setting == "") then
+        Config.set("vireview", not Config.get("vireview"))
+    else
+        Utility.msg_prim("Syntax: @Yacm config vireview [on|off]")
+        return
+    end
+    local vireview = Config.get("vireview")
+    local msg = "Will %s add channel messages to VI review buffers."
+    Utility.msg_prim(msg:format(vireview and "now" or "no longer"))
+    if (vireview and not Utility.vi_review_enabled()) then
+        Utility.msg_sec("Note: The VI Review Buffers plugin is not currently enabled.")
+    end
+end
 ]]>
 </script>
 
@@ -503,7 +534,16 @@ function Channel.post(channel, msg)
         PlaySound(0, channel.sound, false, vol, 0)
     end
     
-    Utility.print(string.format("%s%s", channel.prefix, msg))
+    local line = string.format("%s%s", channel.prefix, msg)
+    if (Config.get("vireview") and Utility.vi_review_enabled()) then
+        local cmd = "vi add %s=%s"
+        Execute(cmd:format(
+            Utility.pascal_case(channel.name),
+            strip_colours(line)
+        ))
+    end
+    
+    Utility.print(line)
 end
 ]]>
 </script>
@@ -567,6 +607,10 @@ end
 
 function Utility.ends_with(s, t)
     return Utility.starts_with(s:reverse(), t:reverse())
+end
+
+function Utility.vi_review_enabled()
+    return GetPluginInfo("6000a4c6f0e71d31fecf523d", 17)
 end
 ]]>
 </script>

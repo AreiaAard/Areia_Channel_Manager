@@ -624,6 +624,51 @@ end
 
 <aliases>
     <alias
+     match="^acm\s+help$"
+     enabled="y"
+     script="Help.show"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
+</aliases>
+
+<script>
+<![CDATA[
+--------------------------------------------------
+-- Update
+--------------------------------------------------
+
+Help = {}
+
+function Help.show(alias, line, wc)
+        Utility.print[[
+                          @WChannel Manager Commands
+                          @w========================
+ 
+@Yacm add [<name>]              @W: @wAdd a new channel
+@Yacm del [<name>]              @W: @wDelete a channel
+@Yacm list                      @W: @wList all your channels
+ 
+@Yacm config timestamps [on|off]@W: @wToggle display of timestamps in channel history
+@Yacm config mute [on|off]      @W: @wMute and unmute channel sounds
+@Yacm config commlog [on|off]   @W: @wToggle whether to send channel messages to the
+                                @wcomm log
+@Yacm config vireview [on|off]  @W: @wToggle whether to send channel messages to VI
+                                @wreview buffers
+ 
+@Yacm update                    @W: @wUpdate the plugin
+@Yacm help                      @W: @wView this helpfile
+    ]]
+end
+]]>
+</script>
+
+
+
+<aliases>
+    <alias
      match="^acm\s+update$"
      enabled="y"
      script="Update.update"

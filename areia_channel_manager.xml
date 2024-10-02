@@ -92,6 +92,15 @@
     >
     </alias>
     <alias
+     match="^acm\s+config\s+commlog(?<setting>.*)$"
+     enabled="y"
+     script="Config.set_commlog"
+     regexp="y"
+     ignore_case="y"
+     sequence="100"
+    >
+    </alias>
+    <alias
      match="^acm\s+config\s+vireview(?<setting>.*)$"
      enabled="y"
      script="Config.set_vireview"
@@ -137,6 +146,7 @@ function Config.default()
         ["channels"] = {},
         ["mute"] = false,
         ["timestamps"] = true,
+        ["commlog"] = true,
         ["vireview"] = true,
     }
     return serialize.save_simple(data)
@@ -377,6 +387,26 @@ function Config.set_mute(alias, line, wc)
     Utility.msg_prim(msg:format(mute and "" or "un"))
 end
 
+function Config.set_commlog(alias, line, wc)
+    local setting = trim(wc.setting:lower())
+    if (setting == "on") then
+        Config.set("commlog", true)
+    elseif (setting == "off") then
+        Config.set("commlog", false)
+    elseif (setting == "") then
+        Config.set("commlog", not Config.get("commlog"))
+    else
+        Utility.msg_prim("Syntax: @Yacm config commlog [on|off]")
+        return
+    end
+    local commlog = Config.get("commlog")
+    local msg = "Will %s add channel messages to the comm log."
+    Utility.msg_prim(msg:format(commlog and "now" or "no longer"))
+    if (commlog and not Utility.comm_log_enabled()) then
+        Utility.msg_sec("Note: The chat capture miniwindow plugin is not currently enabled.")
+    end
+end
+
 function Config.set_vireview(alias, line, wc)
     local setting = trim(wc.setting:lower())
     if (setting == "on") then
@@ -574,15 +604,18 @@ function Channel.post(channel, msg)
     end
     
     local line = string.format("%s%s", channel.prefix, msg)
+    local tab = Utility.pascal_case(channel.name)
+
+    if (Config.get("commlog") and Utility.comm_log_enabled()) then
+        Utility.send_to_comm_log(line, tab)
+    end
+
     if (Config.get("vireview") and Utility.vi_review_enabled()) then
-        local cmd = "vi add %s=%s"
-        Execute(cmd:format(
-            Utility.pascal_case(channel.name),
-            strip_colours(line)
-        ))
+        Utility.send_to_vi_review(line, tab)
     end
     
     Utility.print(line)
+    return true
 end
 ]]>
 </script>
@@ -716,8 +749,31 @@ function Utility.ends_with(s, t)
     return Utility.starts_with(s:reverse(), t:reverse())
 end
 
+function Utility.comm_log_enabled()
+    return GetPluginInfo("b555825a4a5700c35fa80780", 17)
+end
+
+function Utility.send_to_comm_log(text, tab, timestamp, omit)
+    local code, err = CallPlugin("b555825a4a5700c35fa80780", "storeFromOutside", text, tab, timestamp, omit)
+    if (code ~= error_code.eOK) then
+        Utility.msg_prim("Error sending message to comm log:")
+        local msg = ("%s [%d]"):format(error_desc[code], code)
+        Utility.msg_sec(msg)
+        return false
+    end
+    return true
+end
+
 function Utility.vi_review_enabled()
     return GetPluginInfo("6000a4c6f0e71d31fecf523d", 17)
+end
+
+function Utility.send_to_vi_review(text, tab)
+    text = strip_colours(text)
+    local cmd = "vi add %s=%s"
+    cmd = cmd:format(tab, text)
+    Execute(cmd)
+    return true
 end
 ]]>
 </script>
